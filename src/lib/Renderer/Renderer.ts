@@ -9,23 +9,19 @@ export interface RendererOptions {
 
 class Renderer {
   public readonly ctx: CanvasRenderingContext2D;
-  public readonly draw: RendererDraw;
 
   private _dpr = 1;
   private _lastSize!: Size;
   private _shouldUpdate = true;
+  public draw: RendererDraw;
 
   constructor(
-    public readonly el: HTMLCanvasElement,
-    options?: RendererOptions
+    public readonly canvasEl: HTMLCanvasElement,
+    { dpr = window.devicePixelRatio }: RendererOptions = {}
   ) {
-    const _options = {
-      dpr: window.devicePixelRatio,
-      ...options
-    };
-
-    this.ctx = this.el.getContext('2d')!;
-    this._dpr = _options.dpr;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    this.ctx = this.canvasEl.getContext('2d')!;
+    this._dpr = dpr;
     this.draw = new RendererDraw(this);
 
     this._handleWindowResize = this._handleWindowResize.bind(this);
@@ -67,9 +63,7 @@ class Renderer {
 
       this._shouldUpdate = false;
 
-      this.updateOrigin();
-    } else {
-      this.clear();
+      // this.updateOrigin();
     }
   }
 
@@ -86,7 +80,7 @@ class Renderer {
     start: Vector2Object;
     end: Vector2Object;
   } {
-    const { width, height } = this.el;
+    const { width, height } = this.canvasEl;
 
     const x = width / 2;
     const y = height / 2;
@@ -108,25 +102,26 @@ class Renderer {
   }
 
   get size(): Size {
-    return new Size(this.el.offsetWidth, this.el.offsetHeight);
+    return new Size(this.canvasEl.offsetWidth, this.canvasEl.offsetHeight);
   }
 
   get intrinsicSize(): Size {
-    return new Size(this.el.width, this.el.height);
+    return new Size(this.canvasEl.width, this.canvasEl.height);
   }
 
   set intrinsicSize(size: number | ISize) {
-    this.el.width = this._dpr * (typeof size === 'number' ? size : size.width);
-    this.el.height =
+    this.canvasEl.width =
+      this._dpr * (typeof size === 'number' ? size : size.width);
+    this.canvasEl.height =
       this._dpr * (typeof size === 'number' ? size : size.height);
   }
 
   get width(): number {
-    return this.el.width;
+    return this.canvasEl.width;
   }
 
   get height(): number {
-    return this.el.height;
+    return this.canvasEl.height;
   }
 
   get center(): Vector2Object {
@@ -139,22 +134,22 @@ class Renderer {
   clear(): void {
     this.ctx.save();
     this.ctx.resetTransform();
-    this.ctx.clearRect(0, 0, this.el.width, this.el.height);
+    this.ctx.clearRect(0, 0, this.canvasEl.width, this.canvasEl.height);
     this.ctx.restore();
   }
 
-  background(color: string) {
-    this.ctx.save();
-    this.ctx.resetTransform();
-    this.ctx.fillStyle = color;
-    this.ctx.fillRect(
-      0,
-      0,
-      this.el.width * this.dpr,
-      this.el.height * this.dpr
-    );
-    this.ctx.restore();
-  }
+  // background(color: string) {
+  //   this.ctx.save();
+  //   this.ctx.resetTransform();
+  //   this.ctx.fillStyle = color;
+  //   this.ctx.fillRect(
+  //     0,
+  //     0,
+  //     this.canvasEl.width * this.dpr,
+  //     this.canvasEl.height * this.dpr
+  //   );
+  //   this.ctx.restore();
+  // }
 }
 
 export default Renderer;

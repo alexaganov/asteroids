@@ -1,13 +1,24 @@
 import Game from './Game';
 
 abstract class GameObject {
-  public isActive = false;
+  private _isActive = true;
 
-  constructor(public readonly game: Game) {}
+  constructor(public game: Game) {}
 
-  init() {}
-  destroy() {}
+  get isActive(): boolean {
+    return this._isActive;
+  }
 
+  activate(): void {
+    this._isActive = true;
+  }
+
+  deactivate(): void {
+    this._isActive = false;
+  }
+
+  abstract init(): void;
+  abstract destroy(): void;
   abstract update(): void;
   abstract render(): void;
 }

@@ -1,9 +1,9 @@
 import { TWO_PI } from './utils/math';
 
 class Random {
-  public static get(): number;
-  public static get(min: number, max: number): number;
-  public static get(min?: number, max?: number): number {
+  public static getNumber(): number;
+  public static getNumber(min: number, max: number): number;
+  public static getNumber(min?: number, max?: number): number {
     let random = Math.random();
 
     if (typeof min === 'number' && typeof max === 'number') {
@@ -11,6 +11,14 @@ class Random {
     }
 
     return random;
+  }
+
+  public static pick<T extends any[]>(...args: T) {
+    return args[Math.floor(this.getNumber(0, args.length))];
+  }
+
+  public static getBoolean() {
+    return !!Math.round(this.getNumber());
   }
 
   private static GAUSS_SPARE: number | null = null;

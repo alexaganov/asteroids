@@ -3,6 +3,10 @@ class UserInputControls {
 }
 
 class UserInput {
+  public readonly pressingKeys: {
+    [key: string]: boolean;
+  } = {};
+
   public readonly pressedKeys: {
     [key: string]: boolean;
   } = {};
@@ -29,14 +33,15 @@ class UserInput {
   // }
 
   private _handleKeyDown(e: KeyboardEvent) {
-    this.pressedKeys[e.code] = true;
+    const wasPressed = this.pressingKeys[e.code];
 
-    // e.preventDefault();
+    this.pressingKeys[e.code] = true;
+    this.pressedKeys[e.code] = !wasPressed;
   }
 
   private _handleKeyUp(e: KeyboardEvent) {
+    this.pressingKeys[e.code] = false;
     this.pressedKeys[e.code] = false;
-
     // e.preventDefault();
   }
 }

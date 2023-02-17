@@ -5,7 +5,7 @@ export type Vector2Object = {
   y: number;
 };
 
-type Vector2Array = [number, number];
+export type Vector2Array = [number, number];
 
 export type Vector2Like = Vector2Object | Vector2Array;
 
@@ -149,18 +149,19 @@ class Vector2 implements Vector2Object {
     this.normalize().multiply(newMagnitude);
   }
 
-  angle(radians?: boolean) {
-    const angle = Math.PI - Math.atan2(this.x, this.y);
-
-    return radians ? angle : angle * RADIANS_TO_DEGREES;
+  get length() {
+    return this.magnitude;
   }
+  // angle(radians?: boolean) {
+  //   const angle = Math.PI - Math.atan2(this.x, this.y);
 
-  rotate(degrees: number): this;
-  rotate(radians: number, isRadians: boolean): this;
-  rotate(value: number, isRadians?: boolean): this {
-    const radians = isRadians ? value : value * DEGREES_TO_RADIANS;
-    const cos = Math.cos(radians);
-    const sin = Math.sin(radians);
+  //   return radians ? angle : angle * RADIANS_TO_DEGREES;
+  // }
+
+  rotateBy(angleInDegrees: number): this {
+    const angleInRadians = angleInDegrees * DEGREES_TO_RADIANS;
+    const cos = Math.cos(angleInRadians);
+    const sin = Math.sin(angleInRadians);
 
     const x = cos * this.x - sin * this.y;
     const y = sin * this.x + cos * this.y;
@@ -170,6 +171,17 @@ class Vector2 implements Vector2Object {
 
     return this;
   }
+
+  // rotateBy(angleInDegrees: number): this {
+  //   const { angle, magnitude } = this;
+  //   const newAngle = angleInDegrees + angle;
+
+  //   return this.rotate(newAngle);
+  //   // this.x = magnitude * Math.cos(newAngle);
+  //   // this.y = magnitude * Math.sin(newAngle);
+
+  //   return this;
+  // }
 
   normalize(): this {
     const m = this.magnitude;
@@ -196,8 +208,20 @@ class Vector2 implements Vector2Object {
     return this.x === vector.x && this.y === vector.y;
   }
 
+  /**
+   * @returns angle in degrees
+   */
+  get angle(): number {
+    return (Math.PI - Math.atan2(this.x, this.y)) * RADIANS_TO_DEGREES;
+    // return Math.atan2(this.y, this.x) * RADIANS_TO_DEGREES;
+  }
+
   get normalized(): Vector2 {
     return new Vector2(this).normalize();
+  }
+
+  get inverted(): Vector2 {
+    return new Vector2(this).invert();
   }
 }
 

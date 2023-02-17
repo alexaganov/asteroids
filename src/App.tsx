@@ -60,8 +60,8 @@ const App = () => {
   return (
     <div className="app">
       <div style={{ color: '#fff' }} className="ui">
-        <button onClick={() => setActiveSceneName('main')}>main</button>
-        <button onClick={() => setActiveSceneName('matrix')}>matrix</button>
+        {/* <button onClick={() => setActiveSceneName('main')}>main</button>
+        <button onClick={() => setActiveSceneName('matrix')}>matrix</button> */}
 
         {/* <button onClick={handleButtonClick}>
           regenerate

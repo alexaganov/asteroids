@@ -8,379 +8,55 @@ import Shape2D from './Shape2D';
 import Size from './Size';
 import UserInput from './UserInput';
 import { DEGREES_TO_RADIANS, TWO_PI } from './utils/math';
-import Vector2 from './Vector2';
+import Vector2, { Vector2Like, Vector2Object } from './Vector2';
 import Game from './Game';
 import GameObject from './GameObject';
-
-interface SpaceshipProperties {}
-
-enum SpaceshipControls {
-  ROTATE_LEFT,
-  ROTATE_RIGHT,
-  MOVE_FORWARD
-}
-
-class Spaceship extends GameObject {
-  private _size: Size = new Size(100, 100);
-  public readonly position: Vector2 = Vector2.zero;
-  // private _position: Vector2 = new Vector2(0);
-  private _velocity: Vector2 = Vector2.zero;
-  private _maxSpeed = 500;
-  private _rotationSpeed = 200;
-  private _accelerationSpeed = 5;
-  private _direction: Vector2 = Vector2.top;
-
-  private _rotationDirection = 0;
-  private _accelerationDirection = 0;
-
-  public readonly shape: Shape2D;
-  public readonly rhomb: Shape2D;
-  public readonly rect: Shape2D;
-
-  constructor(
-    game: Game,
-    properties?: {
-      position: Vector2;
-      size: Size;
-      acceleration: number;
-      maxSpeed: number;
-      rotationSpeed: number;
-      direction: Vector2;
-    }
-  ) {
-    super(game);
-
-    const bottomLength = this._size.height / 3;
-    const topLength = this._size.height - bottomLength;
-
-    const rhombSize = new Size(12, 24);
-
-    this.shape = new Shape2D([
-      new Vector2(0, -topLength),
-      new Vector2(-this._size.width / 2, bottomLength),
-      new Vector2(0, 0),
-      new Vector2(this._size.width / 2, bottomLength)
-    ]);
-
-    this.rhomb = new Shape2D([
-      new Vector2(0, rhombSize.height / -2),
-      new Vector2(rhombSize.width / 2, rhombSize.height / 4),
-      new Vector2(0, rhombSize.height / 2),
-      new Vector2(rhombSize.width / -2, rhombSize.height / 4)
-    ]);
-
-    this.rect = new Shape2D([
-      new Vector2(rhombSize.width / -2, 0),
-      new Vector2(rhombSize.width / 2, 0),
-      new Vector2(rhombSize.width / 2, rhombSize.height),
-      new Vector2(rhombSize.width / -2, rhombSize.height)
-    ]);
-  }
-
-  input() {
-    const { KeyW, KeyA, KeyD, KeyS } = this.game.userInput.pressedKeys;
-
-    if (KeyD) {
-      this._rotationDirection = 1;
-    } else if (KeyA) {
-      this._rotationDirection = -1;
-    } else {
-      this._rotationDirection = 0;
-    }
-
-    if (KeyW) {
-      this._accelerationDirection = 1;
-    } else if (KeyS) {
-      this._accelerationDirection = -1;
-    } else {
-      this._accelerationDirection = 0;
-    }
-  }
-
-  update() {
-    this.input();
-
-    const { mspf } = this.game.gameLoop;
-
-    if (this._rotationDirection !== 0) {
-      this._direction.rotate(
-        this._rotationDirection * this._rotationSpeed * mspf
-      );
-    }
-
-    if (this._accelerationDirection === 1) {
-      const direction = new Vector2(this._direction);
-
-      // if (this._accelerationDirection === 1) {
-      //   direction.invert();
-      // }
-
-      const acceleration = direction.multiply(this._accelerationSpeed * mspf);
-
-      this._velocity.add(acceleration);
-    }
-
-    // if (this._accelerationDirection !== 0) {
-    //   const direction = new Vector2(this._direction);
-
-    //   if (this._accelerationDirection === -1) {
-    //     direction.invert();
-    //   }
-
-    //   const acceleration = direction.multiply(
-    //     this._accelerationSpeed * mspf
-    //   );
-
-    //   this._velocity.add(acceleration);
-    // }
-
-    if (this._accelerationDirection === -1) {
-      const direction = this._velocity.normalized.invert();
-
-      const acceleration = direction.multiply(this._accelerationSpeed * mspf);
-
-      if (acceleration.magnitude > this._velocity.magnitude) {
-        this._velocity = Vector2.zero;
-      } else {
-        this._velocity.add(acceleration);
-      }
-    }
-
-    const maxSpeed = this._maxSpeed * mspf;
-
-    if (this._velocity.magnitude > maxSpeed) {
-      this._velocity.magnitude = maxSpeed;
-    }
-
-    this.position.add(this._velocity);
-  }
-
-  drawBodyArc(position: Vector2, radius: number, spaceAngle: number) {
-    const { draw } = this.game.renderer;
-
-    const directionAngle = this._direction.angle();
-
-    draw.arc(
-      position,
-      radius,
-      directionAngle - (180 + spaceAngle),
-      directionAngle + spaceAngle
-    );
-  }
-
-  drawBody(vertices: Vector2[]) {
-    const { draw } = this.game.renderer;
-
-    draw.startPath(vertices[0]);
-
-    for (let i = 1; i < vertices.length; ++i) {
-      const vertex = vertices[i];
-
-      if (i === 2) {
-        this.drawBodyArc(vertex, 18, 45);
-      } else {
-        draw.lineTo(vertex);
-      }
-    }
-
-    draw.endPath();
-
-    draw.stroke({
-      width: 2,
-      fill: '#fff'
-    });
-  }
-
-  renderBody(position: Vector2) {
-    const { draw, boundary } = this.game.renderer;
-
-    const directionAngle = this._direction.angle();
-
-    const bodyMatrix = Matrix2D.transform(position, directionAngle);
-
-    const bodyVertices = this.shape.vertices.map((vector) => {
-      return bodyMatrix.multiply(vector);
-    });
-
-    this.drawBody(bodyVertices);
-
-    let horizontalClonePosition: Vector2 | null = null;
-    let verticalClonePosition: Vector2 | null = null;
-
-    for (let i = 0; i < bodyVertices.length; ++i) {
-      const vertex = bodyVertices[i];
-
-      if (vertex.x > boundary.end.x || vertex.x < boundary.start.x) {
-        horizontalClonePosition = new Vector2(
-          vertex.x > boundary.end.x
-            ? boundary.start.x - (boundary.end.x - position.x)
-            : position.x - boundary.start.x + boundary.end.x,
-          position.y
-        );
-      }
-
-      if (vertex.y > boundary.end.y || vertex.y < boundary.start.y) {
-        verticalClonePosition = new Vector2(
-          position.x,
-          vertex.y > boundary.end.y
-            ? boundary.start.y - (boundary.end.y - position.y)
-            : position.y - boundary.start.y + boundary.end.y
-        );
-      }
-    }
-
-    if (horizontalClonePosition) {
-      const cloneMatrix = Matrix2D.transform(
-        horizontalClonePosition,
-        directionAngle
-      );
-
-      const cloneVertices = this.shape.vertices.map((vector) => {
-        return cloneMatrix.multiply(vector);
-      });
-
-      this.drawBody(cloneVertices);
-    }
-
-    if (verticalClonePosition) {
-      const cloneMatrix = Matrix2D.transform(
-        verticalClonePosition,
-        directionAngle
-      );
-
-      const cloneVertices = this.shape.vertices.map((vector) => {
-        return cloneMatrix.multiply(vector);
-      });
-
-      this.drawBody(cloneVertices);
-    }
-
-    // const isOutside = (vertices: Vector2[]) => {
-    //   return vertices.some(vertex => {
-    //     return (
-    //       vertex.x > boundary.start.x &&
-    //       vertex.y > boundary.start.y &&
-    //       vertex.x < boundary.end.x &&
-    //       vertex.y < boundary.end.y
-    //     )
-    //   });
-    // }
-  }
-
-  renderCore(position: Vector2) {
-    const { ctx, draw } = this.game.renderer;
-
-    const angle =
-      this._velocity.x === 0 && this._velocity.y === 0
-        ? this._direction.angle()
-        : this._velocity.angle();
-
-    const directionRhomb = Matrix2D.transform(position, angle);
-
-    const directionRhombVertices = this.rhomb.vertices.map((vector) => {
-      return directionRhomb.multiply(vector);
-    });
-
-    const speedometerScaleY =
-      this._velocity.magnitude / (this._maxSpeed * this.game.gameLoop.mspf);
-
-    const speedometerMatrix = Matrix2D.compose(
-      Matrix2D.rotateAt(angle, directionRhombVertices[0]),
-      Matrix2D.translate(directionRhombVertices[0]),
-      Matrix2D.scale({
-        x: 1,
-        y: speedometerScaleY
-      })
-    );
-
-    const speedometerVertices = this.rect.vertices.map((vector) => {
-      return speedometerMatrix.multiply(vector);
-    });
-
-    // direction
-    draw.path(directionRhombVertices);
-    draw.stroke({
-      fill: '#fff',
-      width: 2
-    });
-
-    // speedometer
-    ctx.save();
-    // clip direction rhomb shape
-    ctx.clip();
-    draw.path(speedometerVertices);
-    draw.fill({
-      style: '#fff'
-    });
-    ctx.restore();
-  }
-
-  render() {
-    const { ctx, origin } = this.game.renderer;
-
-    this.renderBody(this.position);
-    this.renderCore(this.position);
-  }
-}
-
-class MainScene extends Scene {
-  public entities: GameObject[] = [];
+import { drawAxis, drawGrid } from './utils/canvas';
+import GameEntity from './GameEntity';
+import Rect from './Rect';
+import Spaceship from './Spaceship';
+import Projectile from './Projectile';
+
+class MainScene extends GameObject {
+  public shown = false;
+  public rectEntity = new Rect(this.game);
   public spaceship = new Spaceship(this.game);
+  public input = new UserInput();
+  public angle = 0;
+  public rotateSpeed = 0.01;
+
+  public mouseX = 0;
+  public mouseY = 0;
+  public x = 0;
+  public y = 0;
+
+  public projectile: Projectile | undefined;
+
+  public projectiles = new Set<Projectile>();
+  public projectilesInPool = new Set<Projectile>();
+  public asteroids = new Set<Asteroid>();
+  public asteroidsInPool = new Set<Asteroid>();
+  public projectileStart = Date.now();
+  public projectileInterval = 200;
+  public asteroidSpawnInterval = 1000;
+  public lastAsteroidSpawnTimestamp = Date.now();
 
   init() {
-    this.entities.push(this.spaceship);
+    this.handleWindowMouseMove = this.handleWindowMouseMove.bind(this);
+    // do nothing
+    window.addEventListener('mousemove', this.handleWindowMouseMove);
 
-    // console.log(this.game.renderer.ctx);
+    this.rectEntity.init();
+    this.spaceship.init();
+  }
 
-    // this.callScenes("init");
-    // this.asteroidPolygon = Asteroid.generateVertices({
-    //   spikiness: 0,
-    //   maxRadius: 100,
-    //   maxSpikeSize: 10,
-    //   numOfVertices: 10
-    // });
+  handleWindowMouseMove(e: MouseEvent) {
+    this.mouseX = e.clientX;
+    this.mouseY = e.clientY;
   }
 
   destroy() {
-    this.entities = [];
-  }
-
-  update() {
-    this.entities.forEach((entity) => entity.update());
-  }
-
-  renderAxis(position: Vector2 = Vector2.zero) {
-    const { draw, width, origin, height, boundary } = this.game.renderer;
-
-    let vx = 0;
-
-    if (position.x > boundary.end.x) {
-      vx = position.x - boundary.end.x;
-    } else if (position.x < boundary.start.x) {
-      vx = position.x - boundary.start.x;
-    }
-
-    draw.verticalLine([vx, position.y - origin.y], height, {
-      style: {
-        fill: 'rgba(0, 255, 0, 0.5)',
-        width: 2
-      }
-    });
-
-    let hy = 0;
-
-    if (position.y > boundary.end.y) {
-      hy = position.y - boundary.end.y;
-    } else if (position.y < boundary.start.y) {
-      hy = position.y - boundary.start.y;
-    }
-
-    draw.horizontalLine([position.x - origin.x, hy], width, {
-      style: {
-        fill: 'rgba(255, 0, 0, 0.5)',
-        width: 2
-      }
-    });
+    window.removeEventListener('mousemove', this.handleWindowMouseMove);
   }
 
   cameraFollow(vector: Vector2) {
@@ -395,25 +71,222 @@ class MainScene extends Scene {
     ctx.scale(this.game.renderer.dpr, this.game.renderer.dpr);
   }
 
-  render() {
-    this.game.renderer.background('#000');
+  createProjectile(position: Vector2, direction: Vector2, speed?: number) {
+    const isIntervalPassed = Date.now() > this.projectileStart;
 
-    const { draw } = this.game.renderer;
+    if (!isIntervalPassed) {
+      return;
+    }
+
+    const [availableProjectile] = this.projectilesInPool;
+
+    if (availableProjectile) {
+      availableProjectile.reset({ direction, position, speed });
+      this.projectiles.add(availableProjectile);
+      this.projectilesInPool.delete(availableProjectile);
+    } else {
+      this.projectiles.add(
+        new Projectile(this.game, { direction, position, speed })
+      );
+    }
+
+    this.projectileStart = Date.now() + this.projectileInterval;
+  }
+
+  createAsteroid() {
+    const isIntervalPassed = Date.now() > this.lastAsteroidSpawnTimestamp;
+
+    if (!isIntervalPassed) {
+      return;
+    }
+
+    const { width, height } = this.game.renderer;
+    const hw = width / 2;
+    const hh = height / 2;
+    const horizontal = Random.getBoolean();
+    const maxRadius = 50;
+
+    console.log({ horizontal });
+
+    let x = 0;
+    let y = 0;
+    const maxX = hw + maxRadius / 2;
+    const maxY = hh + maxRadius / 2;
+
+    if (horizontal) {
+      x = Random.pick(-maxX, maxX);
+      y = Random.getNumber(-maxY, maxY);
+    } else {
+      x = Random.getNumber(-maxY, maxY);
+      y = Random.pick(-maxY, maxY);
+    }
+
+    const [availableAsteroid] = this.asteroidsInPool;
+
+    const position = new Vector2(x, y);
+    const direction = position.inverted.normalize();
+
+    if (availableAsteroid) {
+      availableAsteroid.reset({ position, maxRadius, direction });
+      this.asteroids.add(availableAsteroid);
+      this.asteroidsInPool.delete(availableAsteroid);
+    } else {
+      this.asteroids.add(
+        new Asteroid(this.game, { position, maxRadius, direction })
+      );
+    }
+
+    console.log(this.asteroids, this.asteroidsInPool);
+
+    this.lastAsteroidSpawnTimestamp = Date.now() + this.asteroidSpawnInterval;
+  }
+
+  update() {
+    const { ctx, width, canvasEl, height, origin, center, draw } =
+      this.game.renderer;
+
+    const boundary = canvasEl.getBoundingClientRect();
+
+    const scaleX = width / boundary.width;
+    const scaleY = height / boundary.height;
+
+    const x =
+      (this.mouseX - boundary.left * scaleX) * window.devicePixelRatio -
+      width / 2;
+    const y =
+      (this.mouseY - boundary.top * scaleY) * window.devicePixelRatio -
+      height / 2;
+
+    this.x = x;
+    this.y = y;
+    // todo
+    // this.rectEntity.update();
+    // console.log(this.input.pressedKeys);
+    if (this.input.pressingKeys['KeyA']) {
+      this.spaceship.rotate(-1);
+    } else if (this.input.pressingKeys['KeyD']) {
+      this.spaceship.rotate(1);
+    }
+
+    this.createAsteroid();
+
+    if (this.input.pressingKeys['Space']) {
+      this.createProjectile(
+        new Vector2(this.spaceship.transformedVertices[0]),
+        this.spaceship.direction
+      );
+    }
+
+    for (const asteroid of this.asteroids) {
+      asteroid.update();
+
+      const hw = width / 2;
+      const hh = height / 2;
+
+      const maxX = hw + asteroid.maxRadius / 2;
+      const maxY = hh + asteroid.maxRadius / 2;
+
+      const isOutsideBoundaries =
+        asteroid.position.y > maxY ||
+        asteroid.position.y < -maxY ||
+        asteroid.position.x > maxX ||
+        asteroid.position.x < -maxX;
+
+      if (isOutsideBoundaries) {
+        this.asteroids.delete(asteroid);
+        this.asteroidsInPool.add(asteroid);
+      }
+    }
+
+    for (const projectile of this.projectiles) {
+      projectile.update();
+
+      const hw = width / 2;
+      const hh = height / 2;
+
+      const isOutsideBoundaries =
+        projectile.tailPosition.y > hh ||
+        projectile.tailPosition.y < -hh ||
+        projectile.tailPosition.x > hw ||
+        projectile.tailPosition.x < -hw;
+
+      if (isOutsideBoundaries) {
+        this.projectiles.delete(projectile);
+        this.projectilesInPool.add(projectile);
+      }
+    }
+  }
+
+  render() {
+    const { ctx, width, canvasEl, height, origin, center, draw } =
+      this.game.renderer;
+
+    ctx.save();
+
+    ctx.resetTransform();
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.restore();
 
     // this.cameraFollow(this.spaceship.position);
-    this.renderAxis(Vector2.zero);
+    // this.renderAxis(Vector2.zero);
 
-    draw.grid(Vector2.zero, 10, {
-      color: '#fff',
-      opacity: 0.05
+    drawGrid({
+      ctx,
+      width,
+      height,
+      position: {
+        x: 0,
+        y: 0
+      },
+      origin: {
+        x: width / 2,
+        y: height / 2
+      }
     });
 
-    draw.grid(Vector2.zero, 50, {
-      color: '#fff',
-      opacity: 0.1
+    drawAxis({
+      ctx,
+      width,
+      height,
+      position: {
+        x: 0,
+        y: 0
+      },
+      origin: {
+        x: width / 2,
+        y: height / 2
+      }
     });
 
-    this.entities.forEach((entity) => entity.render());
+    // this.rectEntity.render();
+
+    ctx.beginPath();
+
+    ctx.arc(this.x, this.y, 10, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'red';
+    ctx.stroke();
+
+    this.asteroids.forEach((asteroid) => {
+      asteroid.render();
+    });
+
+    this.projectiles.forEach((projectile) => {
+      projectile.render();
+    });
+
+    this.spaceship.render();
+    // ctx.save();
+
+    // ctx.translate(-width / 2, -height / 2);
+
+    // console.log(
+    //   'isPointInPath',
+    //   ctx.isPointInPath(this.rectEntity.worldPath2D, this.x, this.y)
+    // );
+
+    // ctx.restore();
   }
 }
 

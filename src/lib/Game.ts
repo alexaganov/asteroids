@@ -1,5 +1,6 @@
 import Asteroid from './Asteroid';
 import GameLoop from './GameLoop';
+import OldMainScene from './OldMainScene';
 import MainScene from './MainScene';
 import Matrix2D from './Matrix2D';
 import MatrixScene from './MatrixScene';
@@ -11,6 +12,12 @@ import Size from './Size';
 import UserInput from './UserInput';
 import { DEGREES_TO_RADIANS, TWO_PI } from './utils/math';
 import Vector2 from './Vector2';
+
+/**
+ * const game = createGame(GameAsteroids);
+ * const gameScene = createGameScene(game, SceneClass);
+ * createGameEntity()
+ */
 
 class Game {
   public readonly renderer: Renderer;
