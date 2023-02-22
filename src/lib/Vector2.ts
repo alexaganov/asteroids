@@ -1,9 +1,15 @@
-import { DEGREES_TO_RADIANS, RADIANS_TO_DEGREES } from './utils/math';
+import { DEGREES_TO_RADIANS, lerp, RADIANS_TO_DEGREES } from './utils/math';
 
 export type Vector2Object = {
   x: number;
   y: number;
 };
+
+export enum Orientation {
+  Counterclockwise = -1,
+  Collinear = 0,
+  Clockwise = 1
+}
 
 export type Vector2Array = [number, number];
 
@@ -71,6 +77,40 @@ class Vector2 implements Vector2Object {
     );
   }
 
+  static getIntersection(
+    a1: Vector2Like,
+    a2: Vector2Like,
+    b1: Vector2Like,
+    b2: Vector2Like
+  ): Vector2 | null {
+    const va1 = new Vector2(a1);
+    const va2 = new Vector2(a2);
+    const vb1 = new Vector2(b1);
+    const vb2 = new Vector2(b2);
+
+    const tTop =
+      (vb2.x - vb1.x) * (va1.y - vb1.y) - (vb2.y - vb1.y) * (va1.x - vb1.x);
+    const uTop =
+      (vb1.y - va1.y) * (va1.x - va2.x) - (vb1.x - va1.x) * (va1.y - va2.y);
+    const bottom =
+      (vb2.y - vb1.y) * (va2.x - va1.x) - (vb2.x - vb1.x) * (va2.y - va1.y);
+
+    if (bottom !== 0) {
+      const t = tTop / bottom;
+      const u = uTop / bottom;
+
+      if (t >= 0 && t < 1 && u >= 0 && u <= 1) {
+        return va1.lerp(vb1, t);
+        // return {
+        //   x: lerp(va1.x, vb1.x, t),
+        //   y: lerp(va1.y, vb1.y, t)
+        // };
+      }
+    }
+
+    return null;
+  }
+
   static toObject(v: Vector2Like | number): Vector2Object {
     if (v instanceof Vector2) {
       return v.toObject();
@@ -93,9 +133,30 @@ class Vector2 implements Vector2Object {
     };
   }
 
+  // https://www.geeksforgeeks.org/orientation-3-ordered-points/
+  static orientation(
+    a: Vector2Like,
+    b: Vector2Like,
+    c: Vector2Like
+  ): Orientation {
+    const va = new Vector2(a);
+    const vb = new Vector2(b);
+    const vc = new Vector2(c);
+    const value = (vb.y - va.y) * (vc.x - vb.x) - (vb.x - va.x) * (vc.y - vb.y);
+
+    return Math.sign(value) as Orientation;
+  }
+
   invert(): this {
     this.x = -this.x;
     this.y = -this.y;
+
+    return this;
+  }
+
+  lerp(v: Vector2, amount: number) {
+    this.x = lerp(this.x, v.x, amount);
+    this.y = lerp(this.y, v.y, amount);
 
     return this;
   }
@@ -139,6 +200,15 @@ class Vector2 implements Vector2Object {
     const y = this.y - v.y;
 
     return Math.hypot(x, y);
+  }
+
+  transform(matrix: DOMMatrix): this {
+    const { x, y } = matrix.transformPoint({ x: this.x, y: this.y });
+
+    this.x = x;
+    this.y = y;
+
+    return this;
   }
 
   get magnitude() {

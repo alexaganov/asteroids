@@ -16,14 +16,13 @@ import GameEntity from './GameEntity';
 import Rect from './Rect';
 import Spaceship from './Spaceship';
 import Projectile from './Projectile';
+import ExplosionEffect from './ExplosionEffect';
+import StarsBackground from './StarsBackground';
 
+// TODO: refactor
 class MainScene extends GameObject {
-  public shown = false;
-  public rectEntity = new Rect(this.game);
   public spaceship = new Spaceship(this.game);
   public input = new UserInput();
-  public angle = 0;
-  public rotateSpeed = 0.01;
 
   public mouseX = 0;
   public mouseY = 0;
@@ -36,17 +35,38 @@ class MainScene extends GameObject {
   public projectilesInPool = new Set<Projectile>();
   public asteroids = new Set<Asteroid>();
   public asteroidsInPool = new Set<Asteroid>();
+  public explosionEffects = new Set<ExplosionEffect>();
+  public explosionEffectsInPool = new Set<ExplosionEffect>();
   public projectileStart = Date.now();
   public projectileInterval = 200;
   public asteroidSpawnInterval = 1000;
   public lastAsteroidSpawnTimestamp = Date.now();
+  public starsBackground = new StarsBackground(this.game);
+  public isGameOver = true;
+
+  public gameOverHandler: () => void;
+  public scoringHandler: (score: number) => void;
+
+  public score = 0;
+
+  constructor(
+    game: Game,
+    {
+      onGameOver,
+      onScore
+    }: { onGameOver: () => void; onScore: (score: number) => void }
+  ) {
+    super(game);
+
+    this.gameOverHandler = onGameOver;
+    this.scoringHandler = onScore;
+  }
 
   init() {
     this.handleWindowMouseMove = this.handleWindowMouseMove.bind(this);
     // do nothing
     window.addEventListener('mousemove', this.handleWindowMouseMove);
 
-    this.rectEntity.init();
     this.spaceship.init();
   }
 
@@ -55,21 +75,31 @@ class MainScene extends GameObject {
     this.mouseY = e.clientY;
   }
 
+  reset() {
+    this.score = 0;
+    this.isGameOver = false;
+
+    this.spaceship.reset();
+  }
+
   destroy() {
     window.removeEventListener('mousemove', this.handleWindowMouseMove);
   }
 
-  cameraFollow(vector: Vector2) {
-    const { ctx, origin } = this.game.renderer;
+  // cameraFollow(vector: Vector2) {
+  //   const { ctx, origin } = this.game.renderer;
 
-    ctx.resetTransform();
+  //   ctx.resetTransform();
 
-    const cameraPosition = new Vector2(origin).sub(vector);
+  //   const cameraPosition = new Vector2(origin).sub(vector);
 
-    ctx.translate(+cameraPosition.x.toFixed(2), +cameraPosition.y.toFixed(2));
+  //   ctx.translate(+cameraPosition.x.toFixed(2), +cameraPosition.y.toFixed(2));
 
-    ctx.scale(this.game.renderer.dpr, this.game.renderer.dpr);
-  }
+  //   ctx.scale(this.game.renderer.dpr, this.game.renderer.dpr);
+  // }
+
+  // restart() {
+  // }
 
   createProjectile(position: Vector2, direction: Vector2, speed?: number) {
     const isIntervalPassed = Date.now() > this.projectileStart;
@@ -104,9 +134,7 @@ class MainScene extends GameObject {
     const hw = width / 2;
     const hh = height / 2;
     const horizontal = Random.getBoolean();
-    const maxRadius = 50;
-
-    console.log({ horizontal });
+    const maxRadius = Math.floor(Random.getNumber(30, 60));
 
     let x = 0;
     let y = 0;
@@ -136,14 +164,66 @@ class MainScene extends GameObject {
       );
     }
 
-    console.log(this.asteroids, this.asteroidsInPool);
-
     this.lastAsteroidSpawnTimestamp = Date.now() + this.asteroidSpawnInterval;
   }
 
-  update() {
-    const { ctx, width, canvasEl, height, origin, center, draw } =
-      this.game.renderer;
+  getCollidedAsteroid(projectile: Projectile, asteroids: Set<Asteroid>) {
+    for (const asteroid of asteroids) {
+      const distance = projectile.position.distance(asteroid.position);
+      const hasCollided =
+        0 >= distance - (asteroid.maxRadius + projectile.size);
+
+      if (hasCollided) {
+        return asteroid;
+      }
+    }
+
+    return null;
+  }
+
+  hasAsteroidCollidedSpaceship(asteroid: Asteroid) {
+    const distance = this.spaceship.position.distance(asteroid.position);
+    const hasPossibleCollision =
+      0 >= distance - (asteroid.maxRadius + this.spaceship.size);
+
+    if (hasPossibleCollision) {
+      for (let i = 0; i < asteroid.transformedVertices.length - 1; ++i) {
+        for (
+          let l = 0;
+          l < this.spaceship.transformedVertices.length - 1;
+          ++l
+        ) {
+          const collisionPosition = Vector2.getIntersection(
+            asteroid.transformedVertices[i],
+            asteroid.transformedVertices[i + 1],
+            this.spaceship.transformedVertices[l],
+            this.spaceship.transformedVertices[l + 1]
+          );
+
+          if (collisionPosition) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+  createExplosionEffect(position: Vector2) {
+    const [explosionEffect] = this.explosionEffectsInPool;
+
+    if (explosionEffect) {
+      explosionEffect.reset({ position });
+      this.explosionEffectsInPool.delete(explosionEffect);
+      this.explosionEffects.add(explosionEffect);
+    } else {
+      this.explosionEffects.add(new ExplosionEffect(this.game, { position }));
+    }
+  }
+
+  updateMousePosition() {
+    const { width, canvasEl, height } = this.game.renderer;
 
     const boundary = canvasEl.getBoundingClientRect();
 
@@ -159,25 +239,53 @@ class MainScene extends GameObject {
 
     this.x = x;
     this.y = y;
-    // todo
-    // this.rectEntity.update();
-    // console.log(this.input.pressedKeys);
-    if (this.input.pressingKeys['KeyA']) {
-      this.spaceship.rotate(-1);
-    } else if (this.input.pressingKeys['KeyD']) {
-      this.spaceship.rotate(1);
-    }
+  }
 
-    this.createAsteroid();
+  update() {
+    const { ctx, width, canvasEl, height, origin, center, draw } =
+      this.game.renderer;
 
-    if (this.input.pressingKeys['Space']) {
-      this.createProjectile(
-        new Vector2(this.spaceship.transformedVertices[0]),
-        this.spaceship.direction
-      );
+    this.starsBackground.update();
+
+    if (!this.isGameOver) {
+      if (this.input.pressingKeys['KeyA']) {
+        this.spaceship.rotate(-1);
+      } else if (this.input.pressingKeys['KeyD']) {
+        this.spaceship.rotate(1);
+      }
+
+      this.createAsteroid();
+
+      if (this.input.pressingKeys['Space']) {
+        this.createProjectile(
+          new Vector2(this.spaceship.transformedVertices[0]),
+          this.spaceship.direction
+        );
+      }
+
+      for (const asteroid of this.asteroids) {
+        const isSpaceshipDestroyed =
+          this.hasAsteroidCollidedSpaceship(asteroid);
+
+        if (isSpaceshipDestroyed) {
+          this.isGameOver = true;
+          this.createExplosionEffect(this.spaceship.position);
+
+          this.gameOverHandler();
+        }
+      }
     }
 
     for (const asteroid of this.asteroids) {
+      if (this.isGameOver) {
+        this.createExplosionEffect(asteroid.position);
+
+        this.asteroids.delete(asteroid);
+        this.asteroidsInPool.add(asteroid);
+
+        continue;
+      }
+
       asteroid.update();
 
       const hw = width / 2;
@@ -210,16 +318,38 @@ class MainScene extends GameObject {
         projectile.tailPosition.x > hw ||
         projectile.tailPosition.x < -hw;
 
-      if (isOutsideBoundaries) {
+      const collidedAsteroid =
+        !isOutsideBoundaries &&
+        this.getCollidedAsteroid(projectile, this.asteroids);
+
+      if (isOutsideBoundaries || collidedAsteroid) {
         this.projectiles.delete(projectile);
         this.projectilesInPool.add(projectile);
+
+        if (collidedAsteroid) {
+          this.asteroids.delete(collidedAsteroid);
+          this.asteroidsInPool.add(collidedAsteroid);
+
+          this.createExplosionEffect(collidedAsteroid.position);
+
+          this.score += 1;
+          this.scoringHandler(this.score);
+        }
+      }
+    }
+
+    for (const explosionEffect of this.explosionEffects) {
+      explosionEffect.update();
+
+      if (explosionEffect.particles.size === 0) {
+        this.explosionEffects.delete(explosionEffect);
+        this.explosionEffectsInPool.add(explosionEffect);
       }
     }
   }
 
   render() {
-    const { ctx, width, canvasEl, height, origin, center, draw } =
-      this.game.renderer;
+    const { ctx, width, height } = this.game.renderer;
 
     ctx.save();
 
@@ -229,44 +359,38 @@ class MainScene extends GameObject {
 
     ctx.restore();
 
-    // this.cameraFollow(this.spaceship.position);
-    // this.renderAxis(Vector2.zero);
+    ctx.resetTransform();
+    ctx.translate(width / 2, height / 2);
 
-    drawGrid({
-      ctx,
-      width,
-      height,
-      position: {
-        x: 0,
-        y: 0
-      },
-      origin: {
-        x: width / 2,
-        y: height / 2
-      }
-    });
+    this.starsBackground.render();
 
-    drawAxis({
-      ctx,
-      width,
-      height,
-      position: {
-        x: 0,
-        y: 0
-      },
-      origin: {
-        x: width / 2,
-        y: height / 2
-      }
-    });
+    // drawGrid({
+    //   ctx,
+    //   width,
+    //   height,
+    //   position: {
+    //     x: 0,
+    //     y: 0
+    //   },
+    //   origin: {
+    //     x: width / 2,
+    //     y: height / 2
+    //   }
+    // });
 
-    // this.rectEntity.render();
-
-    ctx.beginPath();
-
-    ctx.arc(this.x, this.y, 10, 0, 2 * Math.PI);
-    ctx.strokeStyle = 'red';
-    ctx.stroke();
+    // drawAxis({
+    //   ctx,
+    //   width,
+    //   height,
+    //   position: {
+    //     x: 0,
+    //     y: 0
+    //   },
+    //   origin: {
+    //     x: width / 2,
+    //     y: height / 2
+    //   }
+    // });
 
     this.asteroids.forEach((asteroid) => {
       asteroid.render();
@@ -276,17 +400,13 @@ class MainScene extends GameObject {
       projectile.render();
     });
 
-    this.spaceship.render();
-    // ctx.save();
+    this.explosionEffects.forEach((explosionEffect) => {
+      explosionEffect.render();
+    });
 
-    // ctx.translate(-width / 2, -height / 2);
-
-    // console.log(
-    //   'isPointInPath',
-    //   ctx.isPointInPath(this.rectEntity.worldPath2D, this.x, this.y)
-    // );
-
-    // ctx.restore();
+    if (!this.isGameOver) {
+      this.spaceship.render();
+    }
   }
 }
 

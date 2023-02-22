@@ -50,11 +50,12 @@ class Asteroid extends GameObject {
   public direction!: Vector2;
   public speed = 10;
   public maxRadius = 20;
-  public rotationSpeed = 10;
+  public rotationSpeed = 2;
+  public angle = 0;
   public vertices: Vector2Array[];
   public initialPosition!: Vector2;
   public position!: Vector2;
-  // public transformedVertices!: Point2D[];
+  public transformedVertices!: Vector2Array[];
 
   constructor(
     game: Game,
@@ -86,18 +87,18 @@ class Asteroid extends GameObject {
       maxSpikeSize: 10,
       numOfVertices: 10
     });
+    this.transformedVertices = this.vertices;
   }
 
-  get transformedVertices() {
-    const rotationMatrix = new DOMMatrix().translate(
-      this.position.x,
-      this.position.y
-    );
+  // get transformedVertices() {
+  //   const rotationMatrix = new DOMMatrix()
+  //     .translateSelf(this.position.x, this.position.y)
+  //     .rotateAxisAngleSelf(0, 0, 1, this.angle);
 
-    return this.vertices.map((vertex) => {
-      return new Point2D(vertex).transform(rotationMatrix);
-    });
-  }
+  //   return this.vertices.map((vertex) => {
+  //     return new Point2D(vertex).transform(rotationMatrix);
+  //   });
+  // }
 
   reset({
     position,
@@ -129,7 +130,17 @@ class Asteroid extends GameObject {
   update() {
     const nextStep = this.direction.clone().multiply(this.speed);
 
+    this.angle += this.rotationSpeed;
     this.position.add(nextStep);
+
+    const rotationMatrix = new DOMMatrix()
+      .translateSelf(this.position.x, this.position.y)
+      .rotateAxisAngleSelf(0, 0, 1, this.angle);
+
+    this.transformedVertices = this.vertices.map((vertex) => {
+      const { x, y } = new Point2D(vertex).transform(rotationMatrix);
+      return [x, y];
+    });
   }
 
   destroy(): void {
@@ -146,10 +157,10 @@ class Asteroid extends GameObject {
 
     ctx.beginPath();
 
-    ctx.moveTo(transformedVertices[0].x, transformedVertices[0].y);
+    ctx.moveTo(transformedVertices[0][0], transformedVertices[0][1]);
 
     for (let i = 1; i < transformedVertices.length; ++i) {
-      const { x, y } = transformedVertices[i];
+      const [x, y] = transformedVertices[i];
 
       ctx.lineTo(x, y);
     }
@@ -164,13 +175,13 @@ class Asteroid extends GameObject {
     ctx.stroke();
 
     // circle
-    ctx.beginPath();
+    // ctx.beginPath();
 
-    ctx.arc(this.position.x, this.position.y, this.maxRadius, 0, TWO_PI);
+    // ctx.arc(this.position.x, this.position.y, this.maxRadius, 0, TWO_PI);
 
-    ctx.strokeStyle = '#0f0';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    // ctx.strokeStyle = '#0f0';
+    // ctx.lineWidth = 1;
+    // ctx.stroke();
   }
 }
 

@@ -17,10 +17,18 @@ abstract class GameObject {
     this._isActive = false;
   }
 
-  abstract init(): void;
-  abstract destroy(): void;
-  abstract update(): void;
-  abstract render(): void;
+  init() {
+    // not implemented
+  }
+  destroy() {
+    // not implemented
+  }
+  update() {
+    // not implemented
+  }
+  render() {
+    // not implemented
+  }
 }
 
 export default GameObject;

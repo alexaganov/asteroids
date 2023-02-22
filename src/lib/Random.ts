@@ -13,6 +13,10 @@ class Random {
     return random;
   }
 
+  public static getInteger(min: number, max: number): number {
+    return Math.floor(this.getNumber(Math.floor(min), Math.floor(max) + 1));
+  }
+
   public static pick<T extends any[]>(...args: T) {
     return args[Math.floor(this.getNumber(0, args.length))];
   }

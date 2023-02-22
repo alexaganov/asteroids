@@ -9,3 +9,7 @@ export const clamp = (num: number, min: number, max: number) =>
 export const countDigits = (num: number): number => {
   return (Math.log10((num ^ (num >> 31)) - (num >> 31)) | 0) + 1;
 };
+
+export const lerp = (a: number, b: number, amount: number) => {
+  return a + (b - a) * amount;
+};

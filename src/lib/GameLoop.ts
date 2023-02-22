@@ -26,6 +26,7 @@ class GameLoop {
 
   private _render: GameLoopRender;
   private _update: GameLoopRender;
+  private isPaused = false;
 
   constructor({ fps, scale, render, update }: GameLoopOptions) {
     if (typeof fps === 'number') {

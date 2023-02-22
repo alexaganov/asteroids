@@ -140,4 +140,6 @@ export const drawAxis = ({
 
   ctx.strokeStyle = 'rgba(255, 0, 0)';
   ctx.stroke();
+
+  ctx.restore();
 };
