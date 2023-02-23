@@ -1,6 +1,5 @@
 import Asteroid from './Asteroid';
 import GameLoop from './GameLoop';
-import OldMainScene from './OldMainScene';
 import MainScene from './MainScene';
 import Matrix2D from './Matrix2D';
 import Random from './Random';
@@ -55,10 +54,6 @@ class Game {
     this.renderer.destroy();
     this.userInput.destroy();
     this.scene.destroy();
-  }
-
-  start() {
-    this.scene.start();
   }
 
   reset() {

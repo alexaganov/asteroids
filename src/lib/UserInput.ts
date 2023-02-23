@@ -1,7 +1,3 @@
-class UserInputControls {
-  constructor(userInput: UserInput, options: { [key: string]: string }) {}
-}
-
 class UserInput {
   public readonly pressingKeys: {
     [key: string]: boolean;
