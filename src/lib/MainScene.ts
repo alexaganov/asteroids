@@ -18,6 +18,9 @@ import Spaceship from './Spaceship';
 import Projectile from './Projectile';
 import ExplosionEffect from './ExplosionEffect';
 import StarsBackground from './StarsBackground';
+import explosionSound from '@/assets/sounds/8bit-explosion.mp3';
+import laserSound from '@/assets/sounds/8bit-laser.mp3';
+import SoundEffects from './SoundEffects';
 
 // TODO: refactor
 class MainScene extends GameObject {
@@ -43,6 +46,10 @@ class MainScene extends GameObject {
   public lastAsteroidSpawnTimestamp = Date.now();
   public starsBackground = new StarsBackground(this.game);
   public isGameOver = true;
+  public soundEffects = new SoundEffects({
+    laser: laserSound,
+    explosion: explosionSound
+  });
 
   public gameOverHandler: () => void;
   public scoringHandler: (score: number) => void;
@@ -107,6 +114,8 @@ class MainScene extends GameObject {
     if (!isIntervalPassed) {
       return;
     }
+
+    this.soundEffects.play('laser');
 
     const [availableProjectile] = this.projectilesInPool;
 
@@ -279,6 +288,7 @@ class MainScene extends GameObject {
     for (const asteroid of this.asteroids) {
       if (this.isGameOver) {
         this.createExplosionEffect(asteroid.position);
+        this.soundEffects.play('explosion');
 
         this.asteroids.delete(asteroid);
         this.asteroidsInPool.add(asteroid);
@@ -331,6 +341,8 @@ class MainScene extends GameObject {
           this.asteroidsInPool.add(collidedAsteroid);
 
           this.createExplosionEffect(collidedAsteroid.position);
+
+          this.soundEffects.play('explosion');
 
           this.score += 1;
           this.scoringHandler(this.score);
