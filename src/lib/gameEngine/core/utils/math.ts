@@ -13,3 +13,6 @@ export const countDigits = (num: number): number => {
 export const lerp = (a: number, b: number, amount: number) => {
   return a + (b - a) * amount;
 };
+
+export const radToDeg = (radians: number) => radians * RADIANS_TO_DEGREES;
+export const degToRad = (radians: number) => radians * DEGREES_TO_RADIANS;

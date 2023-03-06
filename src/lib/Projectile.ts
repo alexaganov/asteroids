@@ -1,6 +1,6 @@
 import Game from './Game';
 import GameObject from './GameObject';
-import Vector2 from './Vector2';
+import Vector2 from './gameEngine/core/Vector2';
 
 class Projectile extends GameObject {
   private speed = 10;

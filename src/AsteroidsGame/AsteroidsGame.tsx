@@ -1,16 +1,21 @@
-import GameLoop from '@/lib/engine/components/GameLoop';
-import Renderer from '@/lib/engine/components/Renderer';
-import Background from './Background';
-import MainScene from './scenes/MainScene';
+import AsteroidsGameMain from './AsteroidsGameMain';
+
+import { createGameLoop } from '@/lib/gameEngine/core/GameLoop';
+import GameLoopProvider from '@/lib/gameEngine/react/components/GameLoopProvider';
+import GameUserInputProvider from '@/lib/gameEngine/react/components/GameUserInputProvider';
+import Renderer from '@/lib/gameEngine/react/components/Renderer';
+
+const gameLoop = createGameLoop();
 
 const AsteroidsGame = () => {
   return (
-    <GameLoop>
-      <Renderer>
-        <Background />
-        <MainScene />
-      </Renderer>
-    </GameLoop>
+    <GameLoopProvider gameLoop={gameLoop}>
+      <GameUserInputProvider>
+        <Renderer>
+          <AsteroidsGameMain />
+        </Renderer>
+      </GameUserInputProvider>
+    </GameLoopProvider>
   );
 };
 

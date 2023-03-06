@@ -1,17 +1,23 @@
+import { useEffect } from 'react';
+
+import Random from '@/lib/gameEngine/core/Random';
+import { clamp, TWO_PI } from '@/lib/gameEngine/core/utils/math';
+import Vector2, {
+  Vector2Array,
+  Vector2Object
+} from '@/lib/gameEngine/core/Vector2';
 import {
   useGameLoopRender,
   useGameLoopUpdate
-} from '@/lib/engine/components/GameLoop';
+} from '@/lib/gameEngine/react/components/GameLoop';
+import { useGameLoopEvent } from '@/lib/gameEngine/react/components/GameLoopProvider';
 import {
   useRenderer,
   useRenderer2dContext
-} from '@/lib/engine/components/Renderer';
-import useRefValue from '@/lib/engine/hooks/useRefValue';
-import Random from '@/lib/Random';
-import { clamp, TWO_PI } from '@/lib/utils/math';
-import Vector2, { Vector2Array, Vector2Object } from '@/lib/Vector2';
+} from '@/lib/gameEngine/react/components/Renderer';
+import useRefValue from '@/lib/gameEngine/react/hooks/useRefValue';
 
-interface Asteroid {
+export interface Asteroid {
   position: Vector2;
   velocity: Vector2;
   vertices: Vector2Array[];
@@ -20,25 +26,6 @@ interface Asteroid {
   angle: number;
   radius: number;
 }
-
-const useInterval = (interval: number) => {
-  const state = useRefValue(() => {
-    return {
-      lastInterval: 0
-    };
-  });
-
-  return (cb: () => void) => {
-    const now = performance.now();
-    const isIntervalPassed = now > state.lastInterval;
-
-    if (isIntervalPassed) {
-      cb();
-
-      state.lastInterval = now + interval;
-    }
-  };
-};
 
 const generateAsteroidVertices = ({
   maxRadius,
@@ -85,26 +72,6 @@ const useAsteroidsSpawner = () => {
   const { canvasEl } = useRenderer();
   const ctx = useRenderer2dContext();
   const asteroids = useRefValue(() => new Set<Asteroid>());
-  const eachSecond = useInterval(1000);
-  const spawnConfig = useRefValue(() => {
-    return {
-      isEnabled: true,
-      spawnInterval: 1000,
-      lastSpawnTimestamp: 0
-    };
-  });
-
-  const enable = () => {
-    spawnConfig.isEnabled = true;
-  };
-
-  const disable = () => {
-    spawnConfig.isEnabled = false;
-  };
-
-  const isEnabled = () => {
-    return spawnConfig.isEnabled;
-  };
 
   const transformVertices = (
     vertices: Vector2Array[],
@@ -141,7 +108,7 @@ const useAsteroidsSpawner = () => {
     }
 
     const position = new Vector2(x, y);
-    const velocity = position.inverted.normalized.multiply(1);
+    const velocity = position.inverted.normalized.multiply(0.2);
     const initialVertices = generateAsteroidVertices({
       maxRadius,
       spikiness: 10,
@@ -154,14 +121,14 @@ const useAsteroidsSpawner = () => {
       position,
       velocity,
       radius: maxRadius,
-      rotationSpeed: 0,
+      rotationSpeed: 0.1,
       angle: 0,
       vertices,
       initialVertices
     });
   };
 
-  useGameLoopUpdate(() => {
+  const update = (simulationTimeStep: number) => {
     const { width, height } = canvasEl;
     const hw = width / 2;
     const hh = height / 2;
@@ -180,52 +147,47 @@ const useAsteroidsSpawner = () => {
         return;
       }
 
-      asteroid.angle = (asteroid.angle + asteroid.rotationSpeed) % 360;
-      asteroid.position.add(asteroid.velocity);
+      asteroid.angle =
+        (asteroid.angle + asteroid.rotationSpeed * simulationTimeStep) % 360;
+      asteroid.position.add(asteroid.velocity.multipliedBy(simulationTimeStep));
       asteroid.vertices = transformVertices(
         asteroid.initialVertices,
         asteroid.position,
         asteroid.angle
       );
     });
+  };
 
-    if (spawnConfig.isEnabled) {
-      eachSecond(() => {
-        spawn();
-      });
-    } else {
-      spawnConfig.lastSpawnTimestamp = 0;
+  const drawAsteroid = ({ vertices }: Asteroid) => {
+    ctx.beginPath();
+
+    ctx.moveTo(vertices[0][0], vertices[0][1]);
+
+    for (let i = 1; i < vertices.length; ++i) {
+      const [x, y] = vertices[i];
+
+      ctx.lineTo(x, y);
     }
-  });
 
-  useGameLoopRender(() => {
-    asteroids.forEach(({ vertices }) => {
-      ctx.beginPath();
+    ctx.closePath();
 
-      ctx.moveTo(vertices[0][0], vertices[0][1]);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.fillStyle = '#000';
 
-      for (let i = 1; i < vertices.length; ++i) {
-        const [x, y] = vertices[i];
+    ctx.fill();
+    ctx.stroke();
+  };
 
-        ctx.lineTo(x, y);
-      }
-
-      ctx.closePath();
-
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2;
-      ctx.fillStyle = '#000';
-
-      ctx.fill();
-      ctx.stroke();
-    });
-  });
+  const render = () => {
+    asteroids.forEach(drawAsteroid);
+  };
 
   return {
-    disable,
-    enable,
-    isEnabled,
-    asteroids
+    asteroids,
+    spawn,
+    render,
+    update
   };
 };
 

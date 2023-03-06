@@ -2,14 +2,14 @@ import Asteroid from './Asteroid';
 import GameLoop from './GameLoop';
 import MainScene from './MainScene';
 import Matrix2D from './Matrix2D';
-import Random from './Random';
+import Random from './gameEngine/core/Random';
 import Renderer from './Renderer/Renderer';
 import Scene from './Scene';
 import Shape2D from './Shape2D';
 import Size from './Size';
 import UserInput from './UserInput';
-import { DEGREES_TO_RADIANS, TWO_PI } from './utils/math';
-import Vector2 from './Vector2';
+import { DEGREES_TO_RADIANS, TWO_PI } from './gameEngine/core/utils/math';
+import Vector2 from './gameEngine/core/Vector2';
 
 /**
  * const game = createGame(GameAsteroids);

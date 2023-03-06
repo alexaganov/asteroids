@@ -1,4 +1,3 @@
-import { createSafeContext, useSafeContext } from '@/shared/utils/contex';
 import React, {
   ReactNode,
   useCallback,
@@ -9,7 +8,10 @@ import React, {
   useState
 } from 'react';
 
-import './Renderer.css';
+import {
+  createSafeContext,
+  useSafeContext
+} from '@/lib/gameEngine/react/utils/context';
 
 interface ContextValue {
   canvasEl: HTMLCanvasElement;
@@ -93,7 +95,15 @@ const Renderer = ({ className, children }: RendererProps) => {
 
   return (
     <>
-      <canvas ref={canvasElRef} className={className} />
+      <canvas
+        ref={canvasElRef}
+        className={className}
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'block'
+        }}
+      />
       {value && <Context.Provider value={value}>{children}</Context.Provider>}
     </>
   );

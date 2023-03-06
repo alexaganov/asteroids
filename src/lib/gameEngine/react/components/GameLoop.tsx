@@ -1,4 +1,3 @@
-import { createSafeContext, useSafeContext } from '@/shared/utils/contex';
 import React, {
   ReactElement,
   useCallback,
@@ -6,6 +5,11 @@ import React, {
   useMemo,
   useRef
 } from 'react';
+
+import {
+  createSafeContext,
+  useSafeContext
+} from '@/lib/gameEngine/react/utils/context';
 
 interface GameLoopProps {
   fps?: number;
@@ -17,6 +21,8 @@ interface ContextValue {
     eventName: EN,
     cb: CB
   ) => () => void;
+  disableUpdate: () => void;
+  enableUpdate: () => void;
 }
 
 const Context = createSafeContext<ContextValue>();
@@ -62,6 +68,7 @@ interface GameLoopEvents {
 }
 
 const GameLoop = ({ children }: GameLoopProps) => {
+  const isUpdateRunningRef = useRef(true);
   const subscribersRef = useRef({
     update: new Set<GameLoopUpdateCallback>(),
     render: new Set<GameLoopRenderCallback>()
@@ -111,7 +118,9 @@ const GameLoop = ({ children }: GameLoopProps) => {
       while (delta > scaledTickInterval) {
         delta -= scaledTickInterval;
 
-        update();
+        if (isUpdateRunningRef.current) {
+          update();
+        }
       }
 
       render((delta * scale) / fps);
@@ -128,8 +137,18 @@ const GameLoop = ({ children }: GameLoopProps) => {
   }, []);
 
   const value = useMemo(() => {
+    const disableUpdate = () => {
+      isUpdateRunningRef.current = false;
+    };
+
+    const enableUpdate = () => {
+      isUpdateRunningRef.current = true;
+    };
+
     return {
-      on
+      on,
+      disableUpdate,
+      enableUpdate
     };
   }, [on]);
 

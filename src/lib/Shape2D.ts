@@ -1,4 +1,4 @@
-import Vector2 from './Vector2';
+import Vector2 from './gameEngine/core/Vector2';
 
 class Shape2D {
   public vertices: Vector2[] = [];

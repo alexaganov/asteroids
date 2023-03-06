@@ -1,7 +1,9 @@
-import { useGameLoopRender } from '@/lib/engine/components/GameLoop';
-import { useRenderer2dContext } from '@/lib/engine/components/Renderer';
-import useRefValue from '@/lib/engine/hooks/useRefValue';
-import Vector2, { Vector2Array } from '@/lib/Vector2';
+import { lerp } from '@/lib/gameEngine/core/utils/math';
+import Vector2, { Vector2Array } from '@/lib/gameEngine/core/Vector2';
+import { useGameLoopRender } from '@/lib/gameEngine/react/components/GameLoop';
+import { useGameLoopEvent } from '@/lib/gameEngine/react/components/GameLoopProvider';
+import { useRenderer2dContext } from '@/lib/gameEngine/react/components/Renderer';
+import useRefValue from '@/lib/gameEngine/react/hooks/useRefValue';
 
 const useSpaceship = () => {
   const ctx = useRenderer2dContext();
@@ -16,14 +18,37 @@ const useSpaceship = () => {
     ];
 
     return {
+      isActive: true,
+      angle: 90,
+      lastAngle: 90,
       direction: Vector2.top,
-      rotationSpeed: 2,
+      lastDirection: Vector2.top,
+      rotationSpeed: 0.4,
       initialVertices,
-      vertices: initialVertices
+      vertices: initialVertices,
+      lastVertices: initialVertices,
+      size,
+      rotateDir: 0
     };
   });
 
-  useGameLoopRender(() => {
+  const transformVertices = (vertices: Vector2Array[], angle: number) => {
+    const rotationMatrix = new DOMMatrix().rotateAxisAngle(0, 0, 1, angle);
+
+    return vertices.map((vertex) => {
+      return new Vector2(vertex).transform(rotationMatrix).toArray();
+    });
+  };
+
+  const rotate = (dir: -1 | 0 | 1) => {
+    state.rotateDir = dir;
+  };
+
+  const reset = () => {
+    (state.vertices = state.initialVertices), (state.direction = Vector2.top);
+  };
+
+  const drawSpaceship = () => {
     const { vertices } = state;
 
     ctx.beginPath();
@@ -44,28 +69,20 @@ const useSpaceship = () => {
 
     ctx.fill();
     ctx.stroke();
-  });
-
-  const transformVertices = (vertices: Vector2Array[], angle: number) => {
-    const rotationMatrix = new DOMMatrix().rotateAxisAngle(0, 0, 1, angle);
-
-    return vertices.map((vertex) => {
-      return new Vector2(vertex).transform(rotationMatrix).toArray();
-    });
   };
 
-  const rotate = (dir: -1 | 0 | 1) => {
-    state.direction.rotateBy(dir * state.rotationSpeed);
-
-    state.vertices = transformVertices(
-      state.initialVertices,
-      state.direction.angle
-    );
+  const update = (simulationTimeStep: number) => {
+    state.lastAngle = state.angle;
+    state.angle += state.rotateDir * state.rotationSpeed * simulationTimeStep;
+    state.vertices = transformVertices(state.initialVertices, state.angle);
   };
 
   return {
     rotate,
-    state
+    state,
+    reset,
+    update,
+    render: drawSpaceship
   };
 };
 

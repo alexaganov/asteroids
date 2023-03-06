@@ -1,5 +1,5 @@
-import { clamp } from './utils/math';
-import { MILLISECONDS_IN_SECOND } from './utils/time';
+import { clamp } from './gameEngine/core/utils/math';
+import { MILLISECONDS_IN_SECOND } from './gameEngine/core/utils/time';
 
 export type GameLoopRender = (gameLoop: GameLoop) => void;
 export type GameLoopUpdate = (gameLoop: GameLoop) => void;

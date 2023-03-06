@@ -1,8 +1,8 @@
 import Game from './Game';
 import GameObject from './GameObject';
-import Random from './Random';
-import { TWO_PI } from './utils/math';
-import Vector2 from './Vector2';
+import Random from './gameEngine/core/Random';
+import { TWO_PI } from './gameEngine/core/utils/math';
+import Vector2 from './gameEngine/core/Vector2';
 
 class ExplosionParticle extends GameObject {
   public position: Vector2;
