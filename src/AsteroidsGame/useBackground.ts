@@ -5,11 +5,6 @@ import Vector2, {
   Vector2Object
 } from '@/lib/gameEngine/core/Vector2';
 import {
-  useGameLoopRender,
-  useGameLoopUpdate
-} from '@/lib/gameEngine/react/components/GameLoop';
-import { useGameLoopEvent } from '@/lib/gameEngine/react/components/GameLoopProvider';
-import {
   useRenderer,
   useRenderer2dContext
 } from '@/lib/gameEngine/react/components/Renderer';
@@ -102,7 +97,7 @@ function* getTilesPositionsGenerator({
   }
 }
 
-const Background = () => {
+const useBackground = () => {
   const { canvasEl } = useRenderer();
   const ctx = useRenderer2dContext();
   const tiles = useRefValue(() => {
@@ -147,24 +142,24 @@ const Background = () => {
     const tile = tiles.get(key);
 
     if (tile) {
-      // ctx.beginPath();
+      ctx.beginPath();
 
-      // ctx.rect(
-      //   tile.position.x,
-      //   tile.position.y,
-      //   config.tileSize,
-      //   config.tileSize
-      // );
-      // ctx.lineWidth = 0.2;
+      ctx.rect(
+        tile.position.x,
+        tile.position.y,
+        config.tileSize,
+        config.tileSize
+      );
+      ctx.lineWidth = 0.2;
 
-      // ctx.strokeStyle = '#0f0';
-      // ctx.stroke();
+      ctx.strokeStyle = '#0f0';
+      ctx.stroke();
 
       tile.stars.forEach(drawStar);
     }
   };
 
-  useGameLoopEvent('update', (simulatedTimeStep) => {
+  const update = (simulatedTimeStep: number) => {
     eachTilePosition((tileX, tileY) => {
       const key = getTileKey(tileX, tileY);
       const tile = tiles.get(key);
@@ -187,28 +182,16 @@ const Background = () => {
         tiles.set(key, createTile(tileX, tileY));
       }
     });
-  });
+  };
 
-  useGameLoopEvent('render', () => {
-    ctx.save();
-    ctx.resetTransform();
-
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
-
-    ctx.restore();
-
-    ctx.save();
-    ctx.resetTransform();
-
-    ctx.translate(canvasEl.width / 2, canvasEl.height / 2);
-
+  const render = () => {
     eachTilePosition(drawTile);
+  };
 
-    // ctx.restore();
-  });
-
-  return null;
+  return {
+    update,
+    render
+  };
 };
 
-export default Background;
+export default useBackground;

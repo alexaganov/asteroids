@@ -1,7 +1,4 @@
-import { lerp } from '@/lib/gameEngine/core/utils/math';
 import Vector2, { Vector2Array } from '@/lib/gameEngine/core/Vector2';
-import { useGameLoopRender } from '@/lib/gameEngine/react/components/GameLoop';
-import { useGameLoopEvent } from '@/lib/gameEngine/react/components/GameLoopProvider';
 import { useRenderer2dContext } from '@/lib/gameEngine/react/components/Renderer';
 import useRefValue from '@/lib/gameEngine/react/hooks/useRefValue';
 
@@ -19,11 +16,9 @@ const useSpaceship = () => {
 
     return {
       isActive: true,
-      angle: 90,
-      lastAngle: 90,
-      direction: Vector2.top,
-      lastDirection: Vector2.top,
-      rotationSpeed: 0.4,
+      angle: 0,
+      lastAngle: 0,
+      rotationSpeed: 0.3,
       initialVertices,
       vertices: initialVertices,
       lastVertices: initialVertices,
@@ -45,11 +40,19 @@ const useSpaceship = () => {
   };
 
   const reset = () => {
-    (state.vertices = state.initialVertices), (state.direction = Vector2.top);
+    state.vertices = state.initialVertices;
+    state.angle = 0;
   };
 
-  const drawSpaceship = () => {
+  const drawSpaceship = (interpolation: number) => {
     const { vertices } = state;
+
+    // const vertices = state.vertices.map((vertex, i) => {
+    //   return [
+    //     lerp(vertex[0], state.lastVertices[i][0], interpolation),
+    //     lerp(vertex[1], state.lastVertices[i][1], interpolation)
+    //   ];
+    // });
 
     ctx.beginPath();
 
@@ -74,6 +77,7 @@ const useSpaceship = () => {
   const update = (simulationTimeStep: number) => {
     state.lastAngle = state.angle;
     state.angle += state.rotateDir * state.rotationSpeed * simulationTimeStep;
+    state.lastVertices = state.vertices;
     state.vertices = transformVertices(state.initialVertices, state.angle);
   };
 

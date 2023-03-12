@@ -1,7 +1,7 @@
-import AsteroidsGameMain from './AsteroidsGameMain';
+import MainScene from './MainScene';
 
 import { createGameLoop } from '@/lib/gameEngine/core/GameLoop';
-import GameLoopProvider from '@/lib/gameEngine/react/components/GameLoopProvider';
+import { GameLoopProvider } from '@/lib/gameEngine/react/components/GameLoop';
 import GameUserInputProvider from '@/lib/gameEngine/react/components/GameUserInputProvider';
 import Renderer from '@/lib/gameEngine/react/components/Renderer';
 
@@ -12,7 +12,7 @@ const AsteroidsGame = () => {
     <GameLoopProvider gameLoop={gameLoop}>
       <GameUserInputProvider>
         <Renderer>
-          <AsteroidsGameMain />
+          <MainScene />
         </Renderer>
       </GameUserInputProvider>
     </GameLoopProvider>

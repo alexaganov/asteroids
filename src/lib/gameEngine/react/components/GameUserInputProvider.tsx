@@ -3,7 +3,7 @@ import React, { PropsWithChildren, useEffect, useRef } from 'react';
 import useRefValue from '../hooks/useRefValue';
 import { createSafeContext, useSafeContext } from '../utils/context';
 
-import { useGameLoopEvent } from './GameLoopProvider';
+import { useGameLoopEvent } from './GameLoop';
 
 interface KeyState {
   isPressing: boolean;

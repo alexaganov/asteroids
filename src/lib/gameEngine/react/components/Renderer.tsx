@@ -101,7 +101,8 @@ const Renderer = ({ className, children }: RendererProps) => {
         style={{
           width: '100%',
           height: '100%',
-          display: 'block'
+          display: 'block',
+          inset: 0
         }}
       />
       {value && <Context.Provider value={value}>{children}</Context.Provider>}

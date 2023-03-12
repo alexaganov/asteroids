@@ -131,6 +131,15 @@ class GameLoop {
     return this;
   }
 
+  updateFps(timestamp: number) {
+    if (timestamp > this.lastFpsUpdate + this.fpsUpdateInterval) {
+      this._fps =
+        (this.fpsAlpha * this.framesSinceLastFpsUpdate * 1000) /
+          (timestamp - this.lastFpsUpdate) +
+        (1 - this.fpsAlpha) * this._fps;
+    }
+  }
+
   tick(timestamp: number) {
     this.rafId = requestAnimationFrame(this.tick);
 
@@ -143,12 +152,7 @@ class GameLoop {
 
     this.emit('begin', [timestamp, this.frameDelta]);
 
-    if (timestamp > this.lastFpsUpdate + this.fpsUpdateInterval) {
-      this._fps =
-        (this.fpsAlpha * this.framesSinceLastFpsUpdate * 1000) /
-          (timestamp - this.lastFpsUpdate) +
-        (1 - this.fpsAlpha) * this._fps;
-    }
+    this.updateFps(timestamp);
 
     this.framesSinceLastFpsUpdate++;
 

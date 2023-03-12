@@ -1,5 +1,3 @@
-import { useEffect } from 'react';
-
 import Random from '@/lib/gameEngine/core/Random';
 import { clamp, TWO_PI } from '@/lib/gameEngine/core/utils/math';
 import Vector2, {
@@ -7,14 +5,10 @@ import Vector2, {
   Vector2Object
 } from '@/lib/gameEngine/core/Vector2';
 import {
-  useGameLoopRender,
-  useGameLoopUpdate
-} from '@/lib/gameEngine/react/components/GameLoop';
-import { useGameLoopEvent } from '@/lib/gameEngine/react/components/GameLoopProvider';
-import {
   useRenderer,
   useRenderer2dContext
 } from '@/lib/gameEngine/react/components/Renderer';
+import useGameInterval from '@/lib/gameEngine/react/hooks/useGameInterval';
 import useRefValue from '@/lib/gameEngine/react/hooks/useRefValue';
 
 export interface Asteroid {
@@ -128,7 +122,11 @@ const useAsteroidsSpawner = () => {
     });
   };
 
-  const update = (simulationTimeStep: number) => {
+  const asteroidsSpawnInterval = useGameInterval(1500, {
+    shouldExecuteOnFirstCall: true
+  });
+
+  const updateAsteroids = (simulationTimeStep: number) => {
     const { width, height } = canvasEl;
     const hw = width / 2;
     const hh = height / 2;
@@ -158,6 +156,12 @@ const useAsteroidsSpawner = () => {
     });
   };
 
+  const update = (simulationTimeStep: number) => {
+    updateAsteroids(simulationTimeStep);
+
+    asteroidsSpawnInterval.execute(spawn);
+  };
+
   const drawAsteroid = ({ vertices }: Asteroid) => {
     ctx.beginPath();
 
@@ -183,11 +187,26 @@ const useAsteroidsSpawner = () => {
     asteroids.forEach(drawAsteroid);
   };
 
+  const reset = () => {
+    asteroidsSpawnInterval.reset();
+  };
+
+  const stop = () => {
+    asteroidsSpawnInterval.stop();
+  };
+
+  const start = () => {
+    asteroidsSpawnInterval.start();
+  };
+
   return {
     asteroids,
     spawn,
     render,
-    update
+    update,
+    reset,
+    stop,
+    start
   };
 };
 

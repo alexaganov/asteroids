@@ -1,6 +1,6 @@
 import Vector2, { Vector2Like } from '../Vector2';
 
-export const isCircleCollidedWithCircle = (
+export const checkCollisionCircleToCircle = (
   a: {
     radius: number;
     position: Vector2Like;
@@ -35,4 +35,23 @@ export const findVerticesIntersection = (
   }
 
   return null;
+};
+
+export const checkCollisionCircularShapeToCircularShape = (
+  a: {
+    radius: number;
+    position: Vector2Like;
+    vertices: Vector2Like[];
+  },
+  b: {
+    radius: number;
+    position: Vector2Like;
+    vertices: Vector2Like[];
+  }
+): boolean => {
+  const isCollisionPossible = checkCollisionCircleToCircle(a, b);
+
+  return (
+    isCollisionPossible && !!findVerticesIntersection(a.vertices, b.vertices)
+  );
 };

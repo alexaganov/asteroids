@@ -144,6 +144,10 @@ body {
   position: relative;
 }
 
+.position-fixed {
+  positioN: fixed;
+}
+
 .left-0 {
   left: 0;
 }
@@ -159,6 +163,15 @@ body {
 .h-full {
   height: 100%;
 }
+
+.h-100vh {
+  height: 100vh;
+}
+
+.w-100vw {
+  width: 100vw;
+}
+
 
 .pointer-events-none {
   pointer-events: none;

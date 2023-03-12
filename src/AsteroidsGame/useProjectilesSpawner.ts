@@ -2,11 +2,6 @@ import { useRef } from 'react';
 
 import Vector2 from '@/lib/gameEngine/core/Vector2';
 import {
-  useGameLoopRender,
-  useGameLoopUpdate
-} from '@/lib/gameEngine/react/components/GameLoop';
-import { useGameLoopEvent } from '@/lib/gameEngine/react/components/GameLoopProvider';
-import {
   useRenderer,
   useRenderer2dContext
 } from '@/lib/gameEngine/react/components/Renderer';
@@ -34,13 +29,19 @@ const useProjectilesSpawner = () => {
 
   const spawn = ({
     size = 3,
+    onSpawn,
     ...otherParams
-  }: Omit<Projectile, 'size'> & { size?: number }) => {
+  }: Omit<Projectile, 'size' | 'onSpawn'> & {
+    size?: number;
+    onSpawn: () => void;
+  }) => {
     const timestamp = performance.now();
 
     if (timestamp < spawnIntervalRef.current.nextSpawnTimestamp) {
       return;
     }
+
+    onSpawn();
 
     projectiles.add({
       ...otherParams,
