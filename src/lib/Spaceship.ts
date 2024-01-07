@@ -1,8 +1,12 @@
 import GameObject from './GameObject';
 import Point2D from './Point2D';
 import { Point2DArray } from './types/Point';
-import { DEGREES_TO_RADIANS, RADIANS_TO_DEGREES, TWO_PI } from './utils/math';
-import Vector2, { Vector2Array } from './Vector2';
+import {
+  DEGREES_TO_RADIANS,
+  RADIANS_TO_DEGREES,
+  TWO_PI
+} from './gameEngine/core/utils/math';
+import Vector2, { Vector2Array } from './gameEngine/core/Vector2';
 
 class Spaceship extends GameObject {
   public size = 100;

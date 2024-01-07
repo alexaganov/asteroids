@@ -1,6 +1,13 @@
 import Game from './Game';
 
-abstract class GameObject {
+interface IGameObject {
+  init?: () => void;
+  update?: () => void;
+  render?: () => void;
+  destroy?: () => void;
+}
+
+abstract class GameObject implements IGameObject {
   private _isActive = true;
 
   constructor(public game: Game) {}

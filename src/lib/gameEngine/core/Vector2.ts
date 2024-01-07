@@ -1,4 +1,9 @@
-import { DEGREES_TO_RADIANS, lerp, RADIANS_TO_DEGREES } from './utils/math';
+import {
+  DEGREES_TO_RADIANS,
+  degToRad,
+  lerp,
+  RADIANS_TO_DEGREES
+} from './utils/math';
 
 export type Vector2Object = {
   x: number;
@@ -187,6 +192,10 @@ class Vector2 implements Vector2Object {
     return this;
   }
 
+  multipliedBy(v: number | Vector2): Vector2 {
+    return this.clone().multiply(v);
+  }
+
   crossProduct(v: Vector2): number {
     return this.x * v.y - this.y * v.x;
   }
@@ -242,16 +251,15 @@ class Vector2 implements Vector2Object {
     return this;
   }
 
-  // rotateBy(angleInDegrees: number): this {
-  //   const { angle, magnitude } = this;
-  //   const newAngle = angleInDegrees + angle;
+  rotateTo(angleInDegrees: number): this {
+    const angleInRadians = degToRad(angleInDegrees);
+    const len = this.magnitude;
 
-  //   return this.rotate(newAngle);
-  //   // this.x = magnitude * Math.cos(newAngle);
-  //   // this.y = magnitude * Math.sin(newAngle);
+    this.x = Math.cos(angleInRadians) * len;
+    this.y = Math.sin(angleInRadians) * len;
 
-  //   return this;
-  // }
+    return this;
+  }
 
   normalize(): this {
     const m = this.magnitude;
@@ -285,6 +293,10 @@ class Vector2 implements Vector2Object {
     return (Math.PI - Math.atan2(this.x, this.y)) * RADIANS_TO_DEGREES;
     // return Math.atan2(this.y, this.x) * RADIANS_TO_DEGREES;
   }
+
+  // set angle(angleInDegrees: number) {
+
+  // }
 
   get normalized(): Vector2 {
     return new Vector2(this).normalize();

@@ -1,6 +1,6 @@
 import RendererResizeObserver from './RendererResizeObserver';
 import Size, { ISize } from '../Size';
-import Vector2, { Vector2Object } from '../Vector2';
+import Vector2, { Vector2Object } from '../gameEngine/core/Vector2';
 import RendererDraw from './RendererDraw';
 
 export interface RendererOptions {

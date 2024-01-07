@@ -1,6 +1,12 @@
 import Size, { ISize } from '@/lib/Size';
-import { countDigits, DEGREES_TO_RADIANS } from '@/lib/utils/math';
-import Vector2, { Vector2Like, Vector2Object } from '@/lib/Vector2';
+import {
+  countDigits,
+  DEGREES_TO_RADIANS
+} from '@/lib/gameEngine/core/utils/math';
+import Vector2, {
+  Vector2Like,
+  Vector2Object
+} from '@/lib/gameEngine/core/Vector2';
 import Renderer from './Renderer';
 
 interface DrawShapeStyle {

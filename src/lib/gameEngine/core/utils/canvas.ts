@@ -1,4 +1,4 @@
-import { Vector2Object } from '@/lib/Vector2';
+import { Vector2Object } from '@/lib/gameEngine/core/Vector2';
 
 export const fixLinePosition = (position: number, lineWidth: number) => {
   const halfLineWidth = lineWidth / 2;

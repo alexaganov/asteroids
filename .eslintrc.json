@@ -15,11 +15,39 @@
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
-  "plugins": ["react", "@typescript-eslint", "prettier"],
+  "plugins": ["react", "@typescript-eslint", "prettier", "eslint-plugin-import"],
   "rules": {
     "react/react-in-jsx-scope": 0,
     "no-console": 1,
     "prettier/prettier": 2,
-    "@typescript-eslint/ban-ts-comment": 0
+    "@typescript-eslint/ban-ts-comment": 0,
+    "import/order": [
+      2,
+      {
+        "newlines-between": "always",
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "parent",
+          "sibling",
+          "index",
+          "unknown",
+          "object",
+          "type"
+        ],
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        },
+        "pathGroups": [
+          {
+            "pattern": "react*",
+            "group": "external",
+            "position": "before"
+          }
+        ]
+      }
+    ]
   }
 }

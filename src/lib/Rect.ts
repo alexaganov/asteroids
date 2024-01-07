@@ -1,6 +1,6 @@
 import GameEntity from './GameEntity';
 import Matrix2D from './Matrix2D';
-import { Vector2Object } from './Vector2';
+import { Vector2Object } from './gameEngine/core/Vector2';
 
 class Rect extends GameEntity {
   private vertices: [number, number][] = [

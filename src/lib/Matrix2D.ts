@@ -1,5 +1,5 @@
-import { DEGREES_TO_RADIANS } from './utils/math';
-import Vector2, { Vector2Like, Vector2Object } from './Vector2';
+import { DEGREES_TO_RADIANS } from './gameEngine/core/utils/math';
+import Vector2, { Vector2Like, Vector2Object } from './gameEngine/core/Vector2';
 
 class Matrix2D {
   public a: number;
