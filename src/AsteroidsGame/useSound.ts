@@ -1,6 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 
-const useSound = <T extends Record<string, string>>(src: string) => {
+const useSound = (src: string) => {
   const audioElRef = useRef<HTMLAudioElement>();
   const [isLoading, setIsLoading] = useState(true);
 

@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 import SoundButton from './SoundButton';
 import useAsteroidsGameController, {
   GameState
@@ -6,7 +8,7 @@ import useAsteroidsSpawner from './useAsteroidsSpawner';
 import useBackground from './useBackground';
 import useExplosionsSpawner from './useExplosionsSpawner';
 import useProjectilesSpawner from './useProjectilesSpawner';
-import useSound from './useSounds';
+import useSound from './useSound';
 import useSpaceship from './useSpaceship';
 
 import explosionEffectSrc from '@/assets/sounds/8bit-explosion.mp3';
@@ -23,6 +25,7 @@ import {
   useRenderer2dContext
 } from '@/lib/gameEngine/react/components/Renderer';
 import useGameInterval from '@/lib/gameEngine/react/hooks/useGameInterval';
+import useRefValue from '@/lib/gameEngine/react/hooks/useRefValue';
 
 const MainScene = () => {
   const { canvasEl } = useRenderer();
@@ -49,6 +52,46 @@ const MainScene = () => {
   });
 
   const { keyboard } = useGameUserInput();
+  const touchscreen = useRefValue<{
+    horizontal: -1 | 0 | 1;
+    topQuadrant: boolean;
+  }>(() => ({ horizontal: 0, topQuadrant: false }));
+
+  useEffect(() => {
+    const handleWindowTouchStart = (e: TouchEvent) => {
+      if (e.target !== canvasEl) {
+        const [touch] = e.touches;
+        const quadrantX = Math.round(touch.clientX / window.innerWidth);
+        const quadrantY = Math.round(touch.clientY / window.innerHeight);
+
+        if (quadrantY === 1) {
+          touchscreen.horizontal = quadrantX === 1 ? 1 : -1;
+        } else {
+          touchscreen.topQuadrant = true;
+        }
+      }
+    };
+
+    const handleWindowTouchEnd = (e: TouchEvent) => {
+      touchscreen.horizontal = 0;
+      touchscreen.topQuadrant = false;
+    };
+
+    const handleWindowFocusout = () => {
+      // keyboardState.pressingKeys = {};
+      // keyboardState.pressedKeys = {};
+    };
+
+    window.addEventListener('blur', handleWindowFocusout);
+    window.addEventListener('touchstart', handleWindowTouchStart);
+    window.addEventListener('touchend', handleWindowTouchEnd);
+
+    return () => {
+      window.removeEventListener('blur', handleWindowFocusout);
+      window.removeEventListener('touchstart', handleWindowTouchStart);
+      window.removeEventListener('touchend', handleWindowTouchEnd);
+    };
+  }, []);
 
   const setupCtx2d = () => {
     ctx.save();
@@ -165,9 +208,9 @@ const MainScene = () => {
   };
 
   const handleUserInput = () => {
-    spaceship.rotate(keyboard.horizontal);
+    spaceship.rotate(keyboard.horizontal || touchscreen.horizontal);
 
-    if (keyboard.pressingKeys.Space) {
+    if (keyboard.pressingKeys.Space || touchscreen.topQuadrant) {
       spawnProjectile();
     }
   };
@@ -210,7 +253,10 @@ const MainScene = () => {
   if (gameState === GameState.FirstGame) {
     return (
       <div className="position-absolute inset-0 d-flex">
-        <p className="m-auto a-blinking text-align-center">
+        <p
+          onClick={() => setGameState(GameState.Running)}
+          className="m-auto a-blinking text-align-center"
+        >
           Press Enter to Play
         </p>
       </div>
@@ -223,7 +269,12 @@ const MainScene = () => {
         <div className="m-auto text-align-center d-flex flex-direction-column gap-10">
           <p className="t-fs-xl">Game Over</p>
           <p>Your Score is {score.value}</p>
-          <p className="a-blinking">Press Enter to Try Again</p>
+          <p
+            onClick={() => setGameState(GameState.Running)}
+            className="a-blinking"
+          >
+            Press Enter to Try Again
+          </p>
         </div>
       </div>
     );

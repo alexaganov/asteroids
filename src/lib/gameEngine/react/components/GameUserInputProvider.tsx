@@ -5,11 +5,6 @@ import { createSafeContext, useSafeContext } from '../utils/context';
 
 import { useGameLoopEvent } from './GameLoop';
 
-interface KeyState {
-  isPressing: boolean;
-  isPressed: boolean;
-}
-
 type KeyboardKeys = `Key${'A' | 'D'}` | 'Space';
 
 interface ContextValue {
@@ -73,7 +68,7 @@ const GameUserInputProvider = ({ children }: GameUserInputProviderProps) => {
     return () => {
       window.removeEventListener('keydown', handleWindowKeydown);
       window.removeEventListener('keyup', handleWindowKeyup);
-      window.addEventListener('blur', handleWindowFocusout);
+      window.removeEventListener('blur', handleWindowFocusout);
     };
   }, []);
 

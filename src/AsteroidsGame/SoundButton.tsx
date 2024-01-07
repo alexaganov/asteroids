@@ -6,13 +6,14 @@ import { ReactComponent as VolumeMuteIcon } from '@/assets/images/icons/volume-m
 interface SoundButtonProps {
   isActive?: boolean;
   onClick?: () => void;
+  className?: string;
 }
 
-const SoundButton = ({ isActive, onClick }: SoundButtonProps) => {
+const SoundButton = ({ isActive, onClick, className }: SoundButtonProps) => {
   return (
     <button
       onClick={onClick}
-      style={{ color: '#fff' }}
+      className={className}
     >
       {isActive ? <VolumeHighIcon /> : <VolumeMuteIcon />}
     </button>
